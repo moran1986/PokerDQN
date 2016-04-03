@@ -7,9 +7,8 @@ import sys
 
 def train():
     sys.stdout.write("Start training")
-    game = Game.Game()
+    game = Game.Game(0)
     game.startRound()
-    gameNum = 0
 
     trainSettings = {'epochs': 3000,
                      'gamma': 0.975,
@@ -20,12 +19,18 @@ def train():
                      'h':0,
                      'model': Network.createModel()}
     experienceCache = [None] * len(game.players)
-    while gameNum < trainSettings['epochs']:
+    while game.gameNum < trainSettings['epochs']:
         playerId = game.turn
         state = encoder.encodeGame(game)
-        qVal, betSize = predictQ(trainSettings['model'], state)
-        game.doBet(betSize)
+        qVal, betSize = predictQ(trainSettings['model'], state, trainSettings['epsilon'])
+        game.doBet(qVal, betSize)
         game.printGame()
+
+        if game.gameNum%100 == 0 and game.gameNum>0:
+            textfile = open("model.json", 'w')
+            textfile.write(trainSettings['model'].to_json())
+            textfile.close()
+            trainSettings['model'].save_weights('model.h5', overwrite=True)
 
         if experienceCache[playerId] is not None:
             (oldState, oldBetSize) = experienceCache[playerId]
@@ -42,11 +47,11 @@ def train():
                     game.turn = i
                     newState = encoder.encodeGame(game)
                     totalExperience = (oldState, oldBetSize, game.players[i].reward, newState)
-                    doTrain(trainSettings, totalExperience)
+                    if game.players[i].reward != 0:
+                        doTrain(trainSettings, totalExperience)
             if len(game.players)==1:
-                game=Game.Game()
+                game=Game.Game(game.gameNum+1)
             game.startRound()
-            gameNum+=1
             if trainSettings['epsilon'] > 0.1: #decrement epsilon over time
                 trainSettings['epsilon'] -= (1/trainSettings['epochs'])
             experienceCache = [None] * len(game.players)
@@ -72,7 +77,7 @@ def doTrain(trainSettings, experience):
             #Get max_Q(S',a)
             old_state, betSize, reward, new_state = memory
             if reward == 0: #non-terminal state
-                newQ, betSize = predictQ(trainSettings['model'], new_state)
+                newQ, betSize = predictQ(trainSettings['model'], new_state, trainSettings['epsilon'])
                 update = (reward + (trainSettings['gamma'] * newQ))
             else: #terminal state
                 update = reward
@@ -82,10 +87,10 @@ def doTrain(trainSettings, experience):
 
         X_train = np.array(X_train)
         y_train = np.array(y_train)
-        trainSettings['model'].fit(X_train, y_train, batch_size=trainSettings['batchSize'], nb_epoch=1, verbose=1)
+        trainSettings['model'].train_on_batch(X_train, y_train)
 
 
-def predictQ(model, state):
+def predictQ(model, state, epsilon):
     state[0,encoder.SIZE-1] = 0
     qvalFold = model.predict(state, batch_size=1)[0,0]
     minimumBet = int(encoder.getCurrentPlayerPotBet(state))
@@ -93,11 +98,29 @@ def predictQ(model, state):
     if minimumBet >= playerMoney:
         state[0,encoder.SIZE-1] = playerMoney
         qvalAllIn = model.predict(state, batch_size=1)
+        if random.random() < epsilon:
+            #random action
+            if random.random() < 0.5:
+                return (qvalAllIn, playerMoney)
+            else:
+                return (qvalFold, 0)
+        #best by Q
         if qvalAllIn > qvalFold:
             return (qvalAllIn, playerMoney)
         else:
             return (qvalFold, 0)
     else:
+        if random.random() < epsilon:
+            #random action
+            randomBet = random.randint(0,playerMoney - minimumBet + 1)
+            if randomBet == 0:
+                return (qvalFold, 0)
+            else:
+                bet = randomBet + minimumBet - 1
+                state[0,encoder.SIZE-1]=bet
+                Q = model.predict(state, batch_size=1)[0,0]
+                return (Q, bet)
+        #best by Q
         (maxQ, bestBet) = findMinimum(model, state, minimumBet, playerMoney)
         if maxQ > qvalFold:
             return (maxQ, bestBet)
@@ -116,3 +139,6 @@ def findMinimum(model, state, start, end):
             maxQ=qVal
             bestBet = i
     return (maxQ, bestBet)
+
+
+train()

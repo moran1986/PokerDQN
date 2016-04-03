@@ -55,43 +55,97 @@ class Combination:
 
     def __cmp__(self, other):
         if self.priority != other.priority:
-            return self.priority.__cmp__(other.priority)
+            return -self.priority.__cmp__(other.priority)
         if self.priority==0:#HIGHER CARD
-            return self.params['value'].__cmp__(other.params['value'])
+            res = -self.params['value1'].__cmp__(other.params['value1'])
+            if res!=0:
+                return res
+            res = -self.params['value2'].__cmp__(other.params['value2'])
+            if res!=0:
+                return res
+            res = -self.params['value3'].__cmp__(other.params['value3'])
+            if res!=0:
+                return res
+            res = -self.params['value4'].__cmp__(other.params['value4'])
+            if res!=0:
+                return res
+            return -self.params['value5'].__cmp__(other.params['value5'])
         if self.priority==1:#PAIR
-            return self.params['value'].__cmp__(other.params['value'])
+            res = -self.params['value1'].__cmp__(other.params['value1'])
+            if res!=0:
+                return res
+            res = -self.params['value2'].__cmp__(other.params['value2'])
+            if res!=0:
+                return res
+            res = -self.params['value3'].__cmp__(other.params['value3'])
+            if res!=0:
+                return res
+            return -self.params['value4'].__cmp__(other.params['value4'])
         if self.priority==2:#TWO PAIRS
-            res = self.params['value1'].__cmp__(other.params['value1'])
+            res = -self.params['value1'].__cmp__(other.params['value1'])
             if res!=0:
                 return res
-            return self.params['value2'].__cmp__(other.params['value2'])
+            res = -self.params['value2'].__cmp__(other.params['value2'])
+            if res!=0:
+                return res
+            return -self.params['value3'].__cmp__(other.params['value3'])
         if self.priority==3:#SET
-            return self.params['value'].__cmp__(other.params['value'])
+            res = -self.params['value1'].__cmp__(other.params['value1'])
+            if res!=0:
+                return res
+            res = -self.params['value2'].__cmp__(other.params['value2'])
+            if res!=0:
+                return res
+            return -self.params['value3'].__cmp__(other.params['value3'])
         if self.priority==4:#STREET
-            return self.params['value'].__cmp__(other.params['value'])
+            return -self.params['value1'].__cmp__(other.params['value1'])
         if self.priority==5:#FLASH
-            res = self.params['value1'].__cmp__(other.params['value1'])
+            res = -self.params['value1'].__cmp__(other.params['value1'])
             if res!=0:
                 return res
-            res = self.params['value2'].__cmp__(other.params['value2'])
+            res = -self.params['value2'].__cmp__(other.params['value2'])
             if res!=0:
                 return res
-            res = self.params['value3'].__cmp__(other.params['value3'])
+            res = -self.params['value3'].__cmp__(other.params['value3'])
             if res!=0:
                 return res
-            res = self.params['value4'].__cmp__(other.params['value4'])
+            res = -self.params['value4'].__cmp__(other.params['value4'])
             if res!=0:
                 return res
-            return self.params['value5'].__cmp__(other.params['value5'])
+            return -self.params['value5'].__cmp__(other.params['value5'])
         if self.priority==6:#FULLHOUSE
-            res = self.params['value1'].__cmp__(other.params['value1'])
+            res = -self.params['value1'].__cmp__(other.params['value1'])
             if res!=0:
                 return res
-            return self.params['value2'].__cmp__(other.params['value2'])
+            return -self.params['value2'].__cmp__(other.params['value2'])
         if self.priority==7:#CARE
-            return self.params['value'].__cmp__(other.params['value'])
+            res = -self.params['value1'].__cmp__(other.params['value1'])
+            if res!=0:
+                return res
+            return -self.params['value2'].__cmp__(other.params['value2'])
         if self.priority==8:#STREET FLASH
-            return self.params['value'].__cmp__(other.params['value'])
+            return -self.params['value1'].__cmp__(other.params['value1'])
+
+
+        def __str__(self):
+            if self.priority==0:
+                return "HIGHER "+self.params['value']
+            elif self.priority==1:
+                return "PAIR "+self.params['value']
+            elif self.priority==2:
+                return "TWO PAIRS "+self.params['value1']+" "+self.params['value2']
+            elif self.priority==3:
+                return "SET "+self.params['value']
+            elif self.priority==4:
+                return "STREET "+self.params['value']
+            elif self.priority==5:
+                return "FLASH "+self.params['value1']+self.params['value2']+self.params['value3']+self.params['value4']+self.params['value5']
+            elif self.priority==6:
+                return "FULL HOUSE "+self.params['value1']+self.params['value2']
+            elif self.priority==7:
+                return "CARE "+self.params['value']
+            elif self.priority==8:
+                return "STREET FLASH "+self.params['value']
 
 
 
@@ -107,6 +161,7 @@ class Player:
         self.bet=0
         self.money=initialMoney
         self.reward=0
+        self.lastQ = None
 
     def giveHand(self, card1, card2):
         self.card1=card1
@@ -137,7 +192,8 @@ class Pot:
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, gameNum):
+        self.gameNum=gameNum
         self.players = []
         self.players.append(Player("P1", 100))
         self.players.append(Player("P2", 100))
@@ -149,7 +205,7 @@ class Game:
         self.players.append(Player("P8", 100))
         self.SB = 3
         self.BB = 5
-        self.button=0
+        self.button=-1
         self.turn = 0
         self.pots = []
         self.table = []
@@ -162,6 +218,12 @@ class Game:
 
     def startRound(self):
         self.roundFinished=False
+        newPlayers = []
+        for player in self.players:
+            if player.money>0:
+                newPlayers.append(player)
+        self.button = (self.button+1)%len(self.players)
+        self.players=newPlayers
         self.dealCards()
         self.makeInitialBets()
         self.turn = (self.button + 3)%len(self.players)
@@ -179,6 +241,8 @@ class Game:
         for player in self.players:
             player.bet=0
             player.status=0
+            player.lastQ=None
+            player.reward=0
 
         sbPos = (self.button + 1)%len(self.players)
         sbPlayer = self.players[sbPos]
@@ -196,8 +260,9 @@ class Game:
         firstPot.bet(bbPlayerBet, bbPlayer)
         self.pots.append(firstPot)
 
-    def doBet(self, money):
+    def doBet(self, qVal, money):
         currentPlayer = self.players[self.turn]
+        currentPlayer.lastQ = qVal
         currentPot = self.getCurrentPot()
         if money < currentPot.size - currentPot.getPlayerBet(currentPlayer) and money < currentPlayer.money-currentPlayer.bet:
             self.doFold()
@@ -246,7 +311,11 @@ class Game:
             currentPlayer.status=3
         currentPot = self.getCurrentPot()
         currentPot.bet(money, currentPlayer)
-        self.moveToNextPlayer()
+        if self.checkNoOneNeedToRaise():
+            self.updatePots()
+            self.finishRound()
+        else:
+            self.moveToNextPlayer()
 
     #только когда размер банка больше денег у игрока
     def doAllIn(self):
@@ -271,15 +340,17 @@ class Game:
         allInBets = list(allInBets)
         allInBets.sort()
 
-        totalAllInBet = 0
+        prevAllInBet = 0
         for allInBet in allInBets:
-            totalAllInBet += allInBet
-            if currentPot.size == totalAllInBet:
+            allInBet -= prevAllInBet
+            prevAllInBet += allInBet
+            if currentPot.size == allInBet:
                 break
             newPot = Pot()
             for playerTitle in currentPot.playersMoney:
-                if currentPot.playersMoney[playerTitle] > totalAllInBet:
-                    newPot.playersMoney[playerTitle] = currentPot.playersMoney[playerTitle] - totalAllInBet
+                if currentPot.playersMoney[playerTitle] > allInBet:
+                    newPot.playersMoney[playerTitle] = currentPot.playersMoney[playerTitle] - allInBet
+                    currentPot.playersMoney[playerTitle] = allInBet
             self.pots.append(newPot)
             currentPot=newPot
 
@@ -302,15 +373,9 @@ class Game:
                 else:
                     notTakenPots.append(pot)
             pots = notTakenPots
-        newPlayers = []
         for player in self.players:
             player.reward -= player.bet
             player.money += player.reward
-            if player.money>0:
-                newPlayers.append(player)
-        self.players=newPlayers
-
-        self.button = (self.button+1)%len(self.players)
         self.roundFinished=True
 
     def calcCombination(self, player):
@@ -342,39 +407,121 @@ class Game:
         flash7 = myindex(suits, 7)
         flash = flash5!=-1 or flash6!=-1 or flash7!=-1
         street = self.getStreetPos(values)
-        higherCard= self.getHigherCard(values)
 
 
         if careValue!=-1:
             priority = 7
-            params['value']=careValue
+            params['value1']=careValue
+            i = len(values)-1
+            while True:
+                if i!=careValue and values[i]>0:
+                    params['value2']=i
+                    break
+                else:
+                    i-=1
         elif setValue!=-1 and pairValue!=-1:
             priority = 6
             params['value1']=setValue
             params['value2']=pairValue
         elif setValue!=-1:
             priority = 3
-            params['value']=setValue
+            params['value1']=setValue
+            i = len(values)-1
+            while True:
+                if i!=setValue and values[i]>0:
+                    if 'value2' not in params:
+                        params['value2']=i
+                    elif 'value3' not in params:
+                        params['value3']=i
+                    else:
+                        break
+                    values[i]-=1
+                    if values[i]==0:
+                        i-=1
+                else:
+                    i-=1
         elif pairValue!=-1:
-            pairValue2 = myindex(values, 2, pairValue+1)
+            pairValue2 = myindex(values, 2, pairValue)
             if pairValue2!=-1:
                 priority = 2
                 params['value1']=pairValue2
                 params['value2']=pairValue
+                i = len(values)-1
+                while True:
+                    if i!=pairValue2 and i!=pairValue and values[i]>0:
+                        params['value3']=i
+                        break
+                    else:
+                        i-=1
             else:
                 priority=1
-                params['value']=pairValue
+                params['value1']=pairValue
+                i = len(values)-1
+                while True:
+                    if i!=pairValue and values[i]>0:
+                        if 'value2' not in params:
+                            params['value2']=i
+                        elif 'value3' not in params:
+                            params['value3']=i
+                        elif 'value4' not in params:
+                            params['value4']=i
+                        else:
+                            break
+                        values[i]-=1
+                        if values[i]==0:
+                            i-=1
+                    else:
+                        i-=1
         elif flash and street!=-1:
             priority = 8
-            params['value']=street
+            params['value1']=street
         elif street!=-1:
             priority = 4
-            params['value']=street
+            params['value1']=street
         elif flash:
             priority=5
+            i = len(values)-1
+            while True:
+                if values[i]>0:
+                    if 'value1' not in params:
+                        params['value1']=i
+                    elif 'value2' not in params:
+                        params['value2']=i
+                    elif 'value3' not in params:
+                        params['value3']=i
+                    elif 'value4' not in params:
+                        params['value4']=i
+                    elif 'value5' not in params:
+                        params['value5']=i
+                    else:
+                        break
+                    values[i]-=1
+                    if values[i]==0:
+                        i-=1
+                else:
+                    i-=1
         else:
             priority=0
-            params['value']=higherCard
+            i = len(values)-1
+            while True:
+                if values[i]>0:
+                    if 'value1' not in params:
+                        params['value1']=i
+                    elif 'value2' not in params:
+                        params['value2']=i
+                    elif 'value3' not in params:
+                        params['value3']=i
+                    elif 'value4' not in params:
+                        params['value4']=i
+                    elif 'value5' not in params:
+                        params['value5']=i
+                    else:
+                        break
+                    values[i]-=1
+                    if values[i]==0:
+                        i-=1
+                else:
+                    i-=1
         return Combination(priority, params)
 
 
@@ -393,13 +540,6 @@ class Game:
                 streetStart=-1
         return -1
 
-    def getHigherCard(self, values):
-        higher = 0
-        for i in range(len(values)):
-            if values[i]!=0:
-                higher = i
-        return i
-
     def moveToNextPlayer(self):
         current = self.turn
         self.turn = (self.turn + 1)%len(self.players)
@@ -416,26 +556,30 @@ class Game:
         return highlander
 
     def checkNoOneNeedToRaise(self):
+        activePlayers = 0
         currentPot = self.getCurrentPot()
         for player in self.players:
-            if player.status==1:
-                continue
-            if player.status==3 or player.status==0:
-                return False
-            if currentPot.getPlayerBet(player) < currentPot.size:
-                return False
-        return True
+            if player.status!=1 and player.status!=4 and currentPot.getPlayerBet(player) < currentPot.size:
+                activePlayers +=1
+        return activePlayers == 0
 
     def getCurrentPot(self):
         return self.pots[-1]
 
 
     def printGame(self):
-        sys.stdout.write("\n\nTable: ")
+        sys.stdout.write("\nGame #"+str(self.gameNum)+" Table: ")
         for card in self.table:
             sys.stdout.write(card.__str__()+" ")
-        for player in self.players:
-            sys.stdout.write("\n"+player.title+":")
+        self.turn
+        for i in range(len(self.players)):
+            player = self.players[i]
+            sys.stdout.write("\n")
+            if i==(self.turn-1)%len(self.players):
+                sys.stdout.write("--> ")
+            else:
+                sys.stdout.write("    ")
+            sys.stdout.write(player.title+":")
             sys.stdout.write(player.card1.__str__()+" "+player.card2.__str__()+"; ")
             sys.stdout.write(str(player.money)+" // "+str(player.bet))
             if player.status == 1:
@@ -446,6 +590,9 @@ class Game:
                 sys.stdout.write(" RAISE")
             if player.status == 4:
                 sys.stdout.write(" ALL-IN")
+            if player.lastQ is not None:
+                sys.stdout.write(" "+str(round(player.lastQ, 4)))
+        sys.stdout.write("\n")
 
 
 def myindex(ar, val, start=None):

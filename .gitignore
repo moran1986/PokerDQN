@@ -1,1 +1,4 @@
 .idea/*
+model/model.h5
+model/model.json
+*.pyc
