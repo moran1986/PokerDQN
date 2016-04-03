@@ -6,7 +6,7 @@ import sys
 
 
 def train():
-    sys.stdout.print("Start training")
+    sys.stdout.write("Start training")
     game = Game.Game()
     game.startRound()
     gameNum = 0
