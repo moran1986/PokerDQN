@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import Game, Network, encoder, random
 import numpy as np
+import sys
 
 
 
 def train():
+    sys.stdout.print("Start training")
     game = Game.Game()
     game.startRound()
     gameNum = 0
@@ -114,7 +116,3 @@ def findMinimum(model, state, start, end):
             maxQ=qVal
             bestBet = i
     return (maxQ, bestBet)
-
-
-
-train()
