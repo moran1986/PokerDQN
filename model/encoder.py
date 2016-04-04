@@ -44,10 +44,10 @@ def encodePlayer(player, currentPlayer, table):
     result[0,player.status]=1
     result[0,5]=player.bet
     result[0,6]=player.money
-    if player==currentPlayer:
-        result[0,7+player.card1.suit*13+player.card1.value]=1
-        result[0,7+player.card2.suit*13+player.card2.value]=1
-    else:
+    #if player==currentPlayer:
+    result[0,7+player.card1.suit*13+player.card1.value]=1
+    result[0,7+player.card2.suit*13+player.card2.value]=1
+    '''else:
         for suit in range(0,4):
             for value in range(0,13):
                 result[0,7+suit*13+value]=45.0/52.0
@@ -57,7 +57,7 @@ def encodePlayer(player, currentPlayer, table):
         result[0,7+table[1].suit*13+table[1].value]=0
         result[0,7+table[2].suit*13+table[2].value]=0
         result[0,7+table[3].suit*13+table[3].value]=0
-        result[0,7+table[4].suit*13+table[4].value]=0
+        result[0,7+table[4].suit*13+table[4].value]=0'''
     #result[0,7+player.combination.priority]=1
 
     '''if 'value1' in player.combination.params:
