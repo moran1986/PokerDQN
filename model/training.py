@@ -2,6 +2,7 @@
 import Game, Network, encoder, random
 import numpy as np
 import sys
+from keras.models import model_from_json
 
 
 
@@ -10,6 +11,11 @@ def train():
     game = Game.Game(0)
     game.startRound()
 
+    modelfile = open('model.json')
+    model = model_from_json(modelfile.read())
+    modelfile.close()
+    model.load_weights('model.h5')
+
     trainSettings = {'epochs': 1000,
                      'gamma': 0.975,
                      'epsilon': 0.5,
@@ -17,7 +23,7 @@ def train():
                      'buffer': 8,
                      'replay':[],
                      'h':0,
-                     'model': Network.createModel()}
+                     'model': model}
     experienceCache = [None] * len(game.players)
     while game.gameNum < trainSettings['epochs']:
         playerId = game.turn
@@ -26,6 +32,7 @@ def train():
         (qVal, betSize, randomQ) = predictQ(trainSettings['model'], state, trainSettings['epsilon'])
         game.doBet(qVal, betSize, randomQ)
         game.printGame()
+        experienceCache[playerId] = (state, betSize)
 
         if game.gameNum%100 == 0 and game.gameNum>0:
             textfile = open("model.json", 'w')
@@ -37,19 +44,22 @@ def train():
 
 
         if game.roundFinished:
-            game.turn = playerId
-            newState = encoder.encodeGame(game)
-            totalExperience = (state, betSize, game.players[playerId].reward, newState, True)
-            doTrain(trainSettings, totalExperience)
+            for i in range(len(game.players)):
+                if experienceCache[i] is not None:
+                    (oldState, oldBetSize) = experienceCache[i]
+                    game.turn = i
+                    newState = encoder.encodeGame(game)
+                    totalExperience = (oldState, oldBetSize, game.players[i].reward, newState, True)
+                    doTrain(trainSettings, totalExperience)
 
             if len(game.players)==1:
                 game=Game.Game(game.gameNum+1)
             game.startRound()
             if trainSettings['epsilon'] > 0.1: #decrement epsilon over time
                 trainSettings['epsilon'] -= (1/trainSettings['epochs'])
-            experienceCache = [None] * len(game.players)
         else:
-            (newState, reward, terminal) = getNewState(game.copy(), trainSettings['model'], playerId)
+            gameCopy = game.copy()
+            (newState, reward, terminal) = getNewState(gameCopy, trainSettings['model'], playerId)
             totalExperience = (state, betSize, reward, newState, terminal)
             doTrain(trainSettings, totalExperience)
 

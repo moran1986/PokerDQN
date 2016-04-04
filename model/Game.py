@@ -62,6 +62,8 @@ class Combination:
         return Combination(self.priority, params)
 
     def __cmp__(self, other):
+        if other == None:
+            return -1
         if self.priority != other.priority:
             return -self.priority.__cmp__(other.priority)
         if self.priority==0:#HIGHER CARD
@@ -414,16 +416,23 @@ class Game:
                 winnerOrder.append(player)
         winnerOrder.sort(key=getPlayerKey)
 
-        pots = self.pots[:]
-        for winner in winnerOrder:
-            notTakenPots = []
-            for pot in pots:
+        for pot in self.pots:
+            potReward = 0
+            winningCombination=None
+            potWinners = []
+            for playerTitle in pot.playersMoney:
+                potReward += pot.playersMoney[playerTitle]
+            for winner in winnerOrder:
                 if winner.title in pot.playersMoney:
-                    for playerTitle in pot.playersMoney:
-                        winner.reward += pot.playersMoney[playerTitle]
-                else:
-                    notTakenPots.append(pot)
-            pots = notTakenPots
+                    if winningCombination == None:
+                        potWinners.append(winner)
+                        winningCombination=winner.combination
+                    elif winningCombination.__cmp__(winner.combination)==0:
+                        potWinners.append(winner)
+            potWinnerReward = potReward / len(potWinners)
+            for winner in potWinners:
+                winner.reward += potWinnerReward
+
         for player in self.players:
             player.reward -= player.bet
             player.bet = 0
