@@ -13,8 +13,8 @@ def train():
     trainSettings = {'epochs': 1000,
                      'gamma': 0.975,
                      'epsilon': 0.5,
-                     'batchSize': 40,
-                     'buffer': 80,
+                     'batchSize': 4,
+                     'buffer': 8,
                      'replay':[],
                      'h':0,
                      'model': Network.createModel()}
@@ -34,7 +34,7 @@ def train():
 
         if experienceCache[playerId] is not None:
             (oldState, oldBetSize) = experienceCache[playerId]
-            totalExperience = (oldState, oldBetSize, 0, state)
+            totalExperience = (oldState, oldBetSize, 0, state, False)
             doTrain(trainSettings, totalExperience)
             experienceCache[playerId] = (state, betSize)
         else:
@@ -46,7 +46,7 @@ def train():
                     (oldState, oldBetSize) = experienceCache[i]
                     game.turn = i
                     newState = encoder.encodeGame(game)
-                    totalExperience = (oldState, oldBetSize, game.players[i].reward, newState)
+                    totalExperience = (oldState, oldBetSize, game.players[i].reward, newState, True)
                     doTrain(trainSettings, totalExperience)
             if len(game.players)==1:
                 game=Game.Game(game.gameNum+1)
@@ -74,11 +74,11 @@ def doTrain(trainSettings, experience):
         y_train = []
         for memory in minibatch:
             #Get max_Q(S',a)
-            old_state, betSize, reward, new_state = memory
-            if reward == 0: #non-terminal state
+            old_state, betSize, reward, new_state, terminal = memory
+            if not terminal:
                 newQ, betSize = predictQ(trainSettings['model'], new_state, 0)
                 update = (reward + (trainSettings['gamma'] * newQ))
-            else: #terminal state
+            else:
                 update = reward
             y = update
             X_train.append(old_state[0])

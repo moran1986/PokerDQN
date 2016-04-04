@@ -221,8 +221,13 @@ class Game:
         self.roundFinished=False
         newPlayers = []
         for player in self.players:
+            player.money += player.reward
+            player.status=0
+            player.lastQ=None
+            player.reward=0
             if player.money>0:
                 newPlayers.append(player)
+
         self.button = (self.button+1)%len(self.players)
         self.players=newPlayers
         self.dealCards()
@@ -240,12 +245,6 @@ class Game:
             player.combination = self.calcCombination(player)
 
     def makeInitialBets(self):
-        for player in self.players:
-            player.bet=0
-            player.status=0
-            player.lastQ=None
-            player.reward=0
-
         sbPos = (self.button + 1)%len(self.players)
         sbPlayer = self.players[sbPos]
         sbPlayerBet = min(sbPlayer.money, self.SB)
@@ -376,7 +375,7 @@ class Game:
             pots = notTakenPots
         for player in self.players:
             player.reward -= player.bet
-            player.money += player.reward
+            player.bet = 0
         self.roundFinished=True
 
     def calcCombination(self, player):
@@ -582,7 +581,7 @@ class Game:
                 sys.stdout.write("    ")
             sys.stdout.write(player.title+":")
             sys.stdout.write(player.card1.__str__()+" "+player.card2.__str__()+"; ")
-            sys.stdout.write(str(player.money)+" // "+str(player.bet))
+            sys.stdout.write(str(player.money)+" // "+str(player.bet)+ " // "+str(player.reward))
             if player.status == 1:
                 sys.stdout.write(" FOLD")
             if player.status == 2:
