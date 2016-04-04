@@ -162,6 +162,7 @@ class Player:
         self.money=initialMoney
         self.reward=0
         self.lastQ = None
+        self.combination=None
 
     def giveHand(self, card1, card2):
         self.card1=card1
@@ -231,11 +232,12 @@ class Game:
     def dealCards(self):
         self.deck = self.globalDeck[:]
         random.shuffle(self.deck)
-        for player in self.players:
-            player.giveHand(self.deck.pop(0), self.deck.pop(0))
         self.table = []
         for i in range(5):
             self.table.append(self.deck.pop(0))
+        for player in self.players:
+            player.giveHand(self.deck.pop(0), self.deck.pop(0))
+            player.combination = self.calcCombination(player)
 
     def makeInitialBets(self):
         for player in self.players:
@@ -358,7 +360,6 @@ class Game:
         winnerOrder = []
         for player in self.players:
             player.reward=0
-            player.combination = self.calcCombination(player)
             if player.status!=1:
                 winnerOrder.append(player)
         winnerOrder.sort(key=getPlayerKey)

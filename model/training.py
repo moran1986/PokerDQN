@@ -10,9 +10,9 @@ def train():
     game = Game.Game(0)
     game.startRound()
 
-    trainSettings = {'epochs': 3000,
+    trainSettings = {'epochs': 1000,
                      'gamma': 0.975,
-                     'epsilon': 1,
+                     'epsilon': 0.5,
                      'batchSize': 40,
                      'buffer': 80,
                      'replay':[],
@@ -43,12 +43,11 @@ def train():
         if game.roundFinished:
             for i in range(len(game.players)):
                 if experienceCache[i] is not None:
-                    (oldState, oldBetSize) = experienceCache[playerId]
+                    (oldState, oldBetSize) = experienceCache[i]
                     game.turn = i
                     newState = encoder.encodeGame(game)
                     totalExperience = (oldState, oldBetSize, game.players[i].reward, newState)
-                    if game.players[i].reward != 0:
-                        doTrain(trainSettings, totalExperience)
+                    doTrain(trainSettings, totalExperience)
             if len(game.players)==1:
                 game=Game.Game(game.gameNum+1)
             game.startRound()
@@ -67,7 +66,7 @@ def doTrain(trainSettings, experience):
         if (trainSettings['h'] < (trainSettings['buffer']-1)):
             trainSettings['h'] += 1
         else:
-            h = 0
+            trainSettings['h'] = 0
         trainSettings['replay'][trainSettings['h']] = experience
         #randomly sample our experience replay memory
         minibatch = random.sample(trainSettings['replay'], trainSettings['batchSize'])
@@ -77,7 +76,7 @@ def doTrain(trainSettings, experience):
             #Get max_Q(S',a)
             old_state, betSize, reward, new_state = memory
             if reward == 0: #non-terminal state
-                newQ, betSize = predictQ(trainSettings['model'], new_state, trainSettings['epsilon'])
+                newQ, betSize = predictQ(trainSettings['model'], new_state, 0)
                 update = (reward + (trainSettings['gamma'] * newQ))
             else: #terminal state
                 update = reward
@@ -97,7 +96,7 @@ def predictQ(model, state, epsilon):
     playerMoney = int(encoder.getCurrentPlayerMoney(state))
     if minimumBet >= playerMoney:
         state[0,encoder.SIZE-1] = playerMoney
-        qvalAllIn = model.predict(state, batch_size=1)
+        qvalAllIn = model.predict(state, batch_size=1)[0,0]
         if random.random() < epsilon:
             #random action
             if random.random() < 0.5:
@@ -139,6 +138,5 @@ def findMinimum(model, state, start, end):
             maxQ=qVal
             bestBet = i
     return (maxQ, bestBet)
-
 
 train()

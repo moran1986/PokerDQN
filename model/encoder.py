@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
-SIZE = 574
+SIZE = 554
 
 
 def getCurrentPlayerMoney(state):
-    return state[0,54]-state[0,53]
+    return state[0,6]-state[0,5]
 
 def getCurrentPlayerPotBet(state):
-    return state[0,520]-state[0,512]
+    return state[0,480]-state[0,472]
 
 def encodeGame(game):
     encodedPlayers = []
@@ -17,7 +17,7 @@ def encodeGame(game):
         if playerPos < len(game.players):
             encodedPlayers.append(encodePlayer(game.players[playerPos]))
         else:
-            encodedPlayers.append(np.zeros((1,55)))
+            encodedPlayers.append(np.zeros((1,59)))
     encodedPots = []
     lastPot = np.zeros((1,9))
     for pot in game.pots:
@@ -25,27 +25,39 @@ def encodeGame(game):
         encodedPots.append(lastPot)
     for i in range(8-len(encodedPots)):
         encodedPots.append(np.zeros((1,9)))
-    encodedPots.append(lastPot)
+    encodedPots.insert(0,lastPot)
 
     encodedTable = np.zeros((1,52))
     for card in game.table:
         encodedTable[0,card.suit*13+card.value]=1
 
-    encodedPlayers=np.array(encodedPlayers)#440
-    encodedPots = np.array(encodedPots)
-    encodedPlayers = encodedPlayers.reshape((1,8*55))
+    encodedPlayers=np.array(encodedPlayers)#472
+    encodedPots = np.array(encodedPots)#81
+    encodedPlayers = encodedPlayers.reshape((1,8*59))
     encodedPots = encodedPots.reshape((1,9*9))
-    return np.concatenate((encodedPlayers, encodedPots, encodedTable, np.zeros((1,1))), axis=1)#8*55+9*9+52+1=574
+    return np.concatenate((encodedPlayers, encodedPots, np.zeros((1,1))), axis=1)#472+81+1=250
 
 
 
 def encodePlayer(player):
-    result = np.zeros((1,55))
-    result[0,player.card1.suit*13+player.card1.value]=1
-    result[0,player.card2.suit*13+player.card2.value]=1
-    result[0,52]=player.status
-    result[0,53]=player.bet
-    result[0,54]=player.money
+    result = np.zeros((1,59))
+    result[0,player.status]=1
+    result[0,5]=player.bet
+    result[0,6]=player.money
+    result[0,7+player.card1.suit*13+player.card1.value]=1
+    result[0,7+player.card2.suit*13+player.card2.value]=1
+    #result[0,7+player.combination.priority]=1
+
+    '''if 'value1' in player.combination.params:
+        result[0,16]=player.combination.params['value1']
+    if 'value2' in player.combination.params:
+        result[0,17]=player.combination.params['value2']
+    if 'value3' in player.combination.params:
+        result[0,18]=player.combination.params['value3']
+    if 'value4' in player.combination.params:
+        result[0,19]=player.combination.params['value4']
+    if 'value5' in player.combination.params:
+        result[0,20]=player.combination.params['value5']'''
     return result
 
 

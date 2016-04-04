@@ -7,12 +7,20 @@ from encoder import SIZE
 def createModel():
     model = Sequential()
 
-    model.add(Dense(500, init='lecun_uniform', input_shape=(SIZE,)))
+    model.add(Dense(1000, input_shape=(SIZE,)))
     model.add(Activation('relu'))
     #model.add(Dropout(0.2)) I'm not using dropout, but maybe you wanna give it a try?
 
-    model.add(Dense(500, init='lecun_uniform'))
+    model.add(Dense(1000))
     model.add(Activation('relu'))
+    #model.add(Dropout(0.2))
+
+    #model.add(Dense(2048, init='lecun_uniform'))
+    #model.add(Activation('relu'))
+    #model.add(Dropout(0.2))
+
+    #model.add(Dense(2048, init='lecun_uniform'))
+    #model.add(Activation('relu'))
     #model.add(Dropout(0.2))
 
     model.add(Dense(1, init='lecun_uniform'))
