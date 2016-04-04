@@ -170,6 +170,7 @@ class Player:
         self.money=initialMoney
         self.reward=0
         self.lastQ = None
+        self.randomQ = False
         self.combination=None
         self.card1=None
         self.card2=None
@@ -185,6 +186,7 @@ class Player:
         result.money=self.money
         result.reward=self.reward
         result.lastQ=self.lastQ
+        result.randomQ = self.randomQ
         result.combination=self.combination.copy()
         result.card1=self.card1.copy()
         result.card2=self.card2.copy()
@@ -271,6 +273,7 @@ class Game:
             player.money += player.reward
             player.status=0
             player.lastQ=None
+            player.randomQ=False
             player.reward=0
             if player.money>0:
                 newPlayers.append(player)
@@ -308,9 +311,10 @@ class Game:
         firstPot.bet(bbPlayerBet, bbPlayer)
         self.pots.append(firstPot)
 
-    def doBet(self, qVal, money):
+    def doBet(self, qVal, money, randomQ):
         currentPlayer = self.players[self.turn]
         currentPlayer.lastQ = qVal
+        currentPlayer.randomQ = randomQ
         currentPot = self.getCurrentPot()
         if money < currentPot.size - currentPot.getPlayerBet(currentPlayer) and money < currentPlayer.money-currentPlayer.bet:
             self.doFold()
@@ -639,6 +643,8 @@ class Game:
                 sys.stdout.write(" ALL-IN")
             if player.lastQ is not None:
                 sys.stdout.write(" "+str(round(player.lastQ, 4)))
+                if player.randomQ:
+                    sys.stdout.write(" RND")
         sys.stdout.write("\n")
 
 

@@ -24,8 +24,8 @@ def testAlgo(init=0):
     while(game.gameNum < 2):
         state = encoder.encodeGame(game)
         game.printGame()
-        qVal, betSize = training.predictQ(trainSettings['model'], state, 0)
-        game.doBet(qVal, betSize)
+        (qVal, betSize, randomQ) = training.predictQ(trainSettings['model'], state, 0)
+        game.doBet(qVal, betSize, randomQ)
         if game.roundFinished:
             game.printGame()
             if len(game.players)==1:

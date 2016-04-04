@@ -22,8 +22,9 @@ def train():
     while game.gameNum < trainSettings['epochs']:
         playerId = game.turn
         state = encoder.encodeGame(game)
-        qVal, betSize = predictQ(trainSettings['model'], state, trainSettings['epsilon'])
-        game.doBet(qVal, betSize)
+
+        (qVal, betSize, randomQ) = predictQ(trainSettings['model'], state, trainSettings['epsilon'])
+        game.doBet(qVal, betSize, randomQ)
         game.printGame()
 
         if game.gameNum%100 == 0 and game.gameNum>0:
@@ -60,8 +61,8 @@ def getNewState(game, model, playerId):
         elif game.turn==playerId:
             return (encoder.encodeGame(game),0, False)
         state = encoder.encodeGame(game)
-        qVal, betSize = predictQ(model, state, 0)
-        game.doBet(qVal, betSize)
+        (qVal, betSize, randomQ) = predictQ(model, state, 0)
+        game.doBet(qVal, betSize, randomQ)
 
 
 def doTrain(trainSettings, experience):
@@ -82,7 +83,7 @@ def doTrain(trainSettings, experience):
             #Get max_Q(S',a)
             old_state, betSize, reward, new_state, terminal = memory
             if not terminal:
-                newQ, betSize = predictQ(trainSettings['model'], new_state, 0)
+                (newQ, betSize, randomQ) = predictQ(trainSettings['model'], new_state, 0)
                 update = (reward + (trainSettings['gamma'] * newQ))
             else:
                 update = reward
@@ -106,31 +107,31 @@ def predictQ(model, state, epsilon):
         if random.random() < epsilon:
             #random action
             if random.random() < 0.5:
-                return (qvalAllIn, playerMoney)
+                return (qvalAllIn, playerMoney, True)
             else:
-                return (qvalFold, 0)
+                return (qvalFold, 0, True)
         #best by Q
         if qvalAllIn > qvalFold:
-            return (qvalAllIn, playerMoney)
+            return (qvalAllIn, playerMoney, False)
         else:
-            return (qvalFold, 0)
+            return (qvalFold, 0, False)
     else:
         if random.random() < epsilon:
             #random action
             randomBet = random.randint(0,playerMoney - minimumBet + 1)
             if randomBet == 0:
-                return (qvalFold, 0)
+                return (qvalFold, 0, True)
             else:
                 bet = randomBet + minimumBet - 1
                 state[0,encoder.SIZE-1]=bet
                 Q = model.predict(state, batch_size=1)[0,0]
-                return (Q, bet)
+                return (Q, bet, True)
         #best by Q
         (maxQ, bestBet) = findMinimum(model, state, minimumBet, playerMoney)
         if maxQ > qvalFold:
-            return (maxQ, bestBet)
+            return (maxQ, bestBet, False)
         else:
-            return (qvalFold, 0)
+            return (qvalFold, 0, False)
 
 
 def findMinimum(model, state, start, end):
