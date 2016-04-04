@@ -417,6 +417,8 @@ class Game:
         winnerOrder.sort(key=getPlayerKey)
 
         for pot in self.pots:
+            if len(pot.playersMoney)==0:
+                continue
             potReward = 0
             winningCombination=None
             potWinners = []
