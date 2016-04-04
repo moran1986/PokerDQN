@@ -13,6 +13,9 @@ class Card:
         self.suit=suit
         self.value=value
 
+    def copy(self):
+        return Card(self.suit, self.value)
+
     def __str__(self):
         return self.valueToStr()
 
@@ -52,6 +55,12 @@ class Combination:
         #7 = CARE
         #8 = STREET FLASH
         self.params=params
+
+    def copy(self):
+        params = {}
+        for val in self.params:
+            params[val]=self.params[val]
+        return Combination(self.priority, params)
 
     def __cmp__(self, other):
         if self.priority != other.priority:
@@ -163,10 +172,24 @@ class Player:
         self.reward=0
         self.lastQ = None
         self.combination=None
+        self.card1=None
+        self.card2=None
 
     def giveHand(self, card1, card2):
         self.card1=card1
         self.card2=card2
+
+    def copy(self):
+        result = Player(self.title, self.money)
+        result.status=self.status
+        result.bet=self.bet
+        result.money=self.money
+        result.reward=self.reward
+        result.lastQ=self.lastQ
+        result.combination=self.combination.copy()
+        result.card1=self.card1.copy()
+        result.card2=self.card2.copy()
+        return result
 
 
 
@@ -177,6 +200,14 @@ class Pot:
     def __init__(self):
         self.size=0
         self.playersMoney={}
+
+    def copy(self):
+        result = Pot()
+        result.size=self.size
+        for playerTitle in self.playersMoney:
+            result.playersMoney[playerTitle]=self.playersMoney[playerTitle]
+        return result
+
 
     def bet(self, money, player):
         playerBetInPot = self.getPlayerBet(player)
@@ -215,6 +246,23 @@ class Game:
         for suit in range(4):
             for value in range(13):
                 self.globalDeck.append(Card(suit, value))
+
+    def copy(self):
+        result = Game(self.gameNum)
+        result.players = []
+        for player in self.players:
+            result.players.append(player.copy())
+        result.SB=self.SB
+        result.BB=self.BB
+        result.button=self.button
+        result.turn=self.turn
+        for pot in self.pots:
+            result.pots.append(pot.copy())
+        for card in self.table:
+            result.table.append(card.copy())
+        result.globalDeck=self.globalDeck
+        result.roundFinished=self.roundFinished
+        return result
 
 
     def startRound(self):

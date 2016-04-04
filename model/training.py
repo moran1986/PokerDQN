@@ -32,30 +32,36 @@ def train():
             textfile.close()
             trainSettings['model'].save_weights('model.h5', overwrite=True)
 
-        if experienceCache[playerId] is not None:
-            (oldState, oldBetSize) = experienceCache[playerId]
-            totalExperience = (oldState, oldBetSize, 0, state, False)
-            doTrain(trainSettings, totalExperience)
-            experienceCache[playerId] = (state, betSize)
-        else:
-            experienceCache[playerId] = (state, betSize)
+
+
 
         if game.roundFinished:
-            for i in range(len(game.players)):
-                if experienceCache[i] is not None:
-                    (oldState, oldBetSize) = experienceCache[i]
-                    game.turn = i
-                    newState = encoder.encodeGame(game)
-                    totalExperience = (oldState, oldBetSize, game.players[i].reward, newState, True)
-                    doTrain(trainSettings, totalExperience)
+            game.turn = playerId
+            newState = encoder.encodeGame(game)
+            totalExperience = (state, betSize, game.players[playerId].reward, newState, True)
+            doTrain(trainSettings, totalExperience)
+
             if len(game.players)==1:
                 game=Game.Game(game.gameNum+1)
             game.startRound()
             if trainSettings['epsilon'] > 0.1: #decrement epsilon over time
                 trainSettings['epsilon'] -= (1/trainSettings['epochs'])
             experienceCache = [None] * len(game.players)
+        else:
+            (newState, reward, terminal) = getNewState(game.copy(), trainSettings['model'], playerId)
+            totalExperience = (state, betSize, reward, newState, terminal)
+            doTrain(trainSettings, totalExperience)
 
-
+def getNewState(game, model, playerId):
+    while True:
+        if game.roundFinished:
+            game.turn = playerId
+            return (encoder.encodeGame(game), game.players[playerId].reward, True)
+        elif game.turn==playerId:
+            return (encoder.encodeGame(game),0, False)
+        state = encoder.encodeGame(game)
+        qVal, betSize = predictQ(model, state, 0)
+        game.doBet(qVal, betSize)
 
 
 def doTrain(trainSettings, experience):
