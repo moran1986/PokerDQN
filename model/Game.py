@@ -3,7 +3,6 @@ import random
 import numpy as np
 import sys
 
-
 class AllOtherFolded(Exception):
     def __init__(self, player):
         self.player=player
@@ -17,17 +16,17 @@ class Card:
         return Card(self.suit, self.value)
 
     def __str__(self):
-        return self.valueToStr()
+        return self.valueToStr()+self.suitToStr()
 
     def suitToStr(self):
         if self.suit==0:
-            return "пик"
+            return u'♠'
         elif self.suit==1:
-            return "треф"
+            return u'♣'
         elif self.suit==2:
-            return "бубей"
+            return u'♦'
         elif self.suit==3:
-            return "червей"
+            return u'♥'
         raise Exception("Bad suit")
 
     def valueToStr(self):
