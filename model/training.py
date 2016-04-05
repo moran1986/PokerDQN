@@ -18,9 +18,9 @@ def train():
 
     trainSettings = {'epochs': 1000,
                      'gamma': 0.975,
-                     'epsilon': 0.5,
-                     'batchSize': 4,
-                     'buffer': 8,
+                     'epsilon': 0.7,
+                     'batchSize': 100,
+                     'buffer': 200,
                      'replay':[],
                      'h':0,
                      'model': Network.createModel()}
@@ -109,8 +109,8 @@ def doTrain(trainSettings, experience):
         bets_train = np.array(bets_train)
         y_train = np.array(y_train)
 
-        bets_train = bets_train.reshape((4,1))
-        y_train = y_train.reshape((4,1))
+        bets_train = bets_train.reshape((trainSettings['batchSize'],1))
+        y_train = y_train.reshape((trainSettings['batchSize'],1))
         trainSettings['model'].fit(data={'cards': cards_train, 'state':states_train, 'bet':bets_train, 'output':y_train}, batch_size=trainSettings['batchSize'], nb_epoch=1)
 
 
