@@ -13,13 +13,13 @@ def createModel():
     model.add_input(name="state", input_shape=(81+7*8,))
     model.add_input(name="bet", input_shape=(1,))
 
-    model.add_node(layer=Dense(512), name="cards1", input="cards")
+    model.add_node(layer=Dense(2048), name="cards1", input="cards")
     model.add_node(layer=PReLU(), name="cards1Act", input="cards1")
 
-    model.add_node(layer=Dense(512), name="cards2", input="cards1Act")
-    model.add_node(layer=PReLU(), name="cards2Act", input="cards2")
+    #model.add_node(layer=Dense(1024), name="cards2", input="cards1Act")
+    #model.add_node(layer=PReLU(), name="cards2Act", input="cards2")
 
-    model.add_node(layer=Dense(1024), name="sum", inputs=["cards2Act", "state", "bet"])
+    model.add_node(layer=Dense(1024), name="sum", inputs=["cards1Act", "state", "bet"])
     model.add_node(layer=PReLU(), name="sumAct", input="sum")
 
     model.add_node(layer=Dense(1), name="res", input="sumAct")

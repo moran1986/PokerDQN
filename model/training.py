@@ -40,9 +40,6 @@ def train():
             textfile.close()
             trainSettings['model'].save_weights('model.h5', overwrite=True)
 
-
-
-
         if game.roundFinished:
             for i in range(len(game.players)):
                 if experienceCache[i] is not None:
@@ -52,9 +49,11 @@ def train():
                     totalExperience = (oldCards, oldState, oldBetSize, game.players[i].reward, newCards, newState, True)
                     doTrain(trainSettings, totalExperience)
 
+            game.startRound()
             if len(game.players)==1:
                 game=Game.Game(game.gameNum+1)
-            game.startRound()
+                game.startRound()
+
             if trainSettings['epsilon'] > 0.1: #decrement epsilon over time
                 trainSettings['epsilon'] -= (1/trainSettings['epochs'])
         else:
@@ -112,7 +111,7 @@ def doTrain(trainSettings, experience):
 
         bets_train = bets_train.reshape((4,1))
         y_train = y_train.reshape((4,1))
-        trainSettings['model'].train_on_batch(data={'cards': cards_train, 'state':states_train, 'bet':bets_train, 'output':y_train})
+        trainSettings['model'].fit(data={'cards': cards_train, 'state':states_train, 'bet':bets_train, 'output':y_train}, batch_size=trainSettings['batchSize'], nb_epoch=1)
 
 
 def predictQ(model, cards, state, epsilon):
