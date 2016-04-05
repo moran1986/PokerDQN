@@ -21,7 +21,7 @@ def testAlgo(init=0):
                      'model': model}
 
     game.startRound()
-    while(game.gameNum < 2):
+    while(game.gameNum < 5):
         state = encoder.encodeGame(game)
         game.printGame()
         (qVal, betSize, randomQ) = training.predictQ(trainSettings['model'], state, 0)
