@@ -25,6 +25,18 @@ def train():
                      'h':0,
                      'model': Network.createModel()}
 
+    textfile = open("model.json", 'w')
+    textfile.write(trainSettings['model'].to_json())
+    textfile.close()
+    trainSettings['model'].save_weights('model.h5', overwrite=True)
+
+    modelfile = open('model.json')
+    model = model_from_json(modelfile.read())
+    modelfile.close()
+    model.load_weights('model.h5')
+
+    trainSettings['newStateModel'] = model
+
     experienceCache = [None] * len(game.players)
     while game.gameNum < trainSettings['epochs']:
         playerId = game.turn
@@ -35,18 +47,7 @@ def train():
         game.printGame()
         experienceCache[playerId] = (cards, state, betSize)
 
-        if game.gameNum%100 == 0:
-            textfile = open("model.json", 'w')
-            textfile.write(trainSettings['model'].to_json())
-            textfile.close()
-            trainSettings['model'].save_weights('model.h5', overwrite=True)
 
-            modelfile = open('model.json')
-            model = model_from_json(modelfile.read())
-            modelfile.close()
-            model.load_weights('model.h5')
-
-            trainSettings['newStateModel'] = model
 
 
         if game.roundFinished:
@@ -62,6 +63,18 @@ def train():
             if len(game.players)==1:
                 game=Game.Game(game.gameNum+1)
                 game.startRound()
+                if game.gameNum%100 == 0:
+                    textfile = open("model.json", 'w')
+                    textfile.write(trainSettings['model'].to_json())
+                    textfile.close()
+                    trainSettings['model'].save_weights('model.h5', overwrite=True)
+
+                    modelfile = open('model.json')
+                    model = model_from_json(modelfile.read())
+                    modelfile.close()
+                    model.load_weights('model.h5')
+
+                    trainSettings['newStateModel'] = model
 
             if trainSettings['epsilon'] > 0.1: #decrement epsilon over time
                 trainSettings['epsilon'] -= (1/trainSettings['epochs'])

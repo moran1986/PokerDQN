@@ -15,15 +15,15 @@ def createModel():
 
     model.add_node(layer=Dense(1024), name="cards1", input="cards")
     model.add_node(layer=Activation("relu"), name="cards1Act", input="cards1")
-    model.add_node(layer=BatchNormalization, name='card1Norm', input='cards1Act')
+    model.add_node(layer=BatchNormalization(), name='card1sNorm', input='cards1Act')
 
     model.add_node(layer=Dense(1024), name="cards2", input="cards1Norm")
     model.add_node(layer=Activation("relu"), name="cards2Act", input="cards2")
-    model.add_node(layer=BatchNormalization, name='card2Norm', input='cards2Act')
+    model.add_node(layer=BatchNormalization(), name='cards2Norm', input='cards2Act')
 
     model.add_node(layer=Dense(1024), name="sum", inputs=["cards2Norm", "state", "bet"])
     model.add_node(layer=Activation("relu"), name="sumAct", input="sum")
-    model.add_node(layer=BatchNormalization, name='sumNorm', input='sumAct')
+    model.add_node(layer=BatchNormalization(), name='sumNorm', input='sumAct')
 
     model.add_node(layer=Dense(1), name="res", input="sumNorm")
     model.add_node(layer=Activation("linear"), name="resAct", input="res")
