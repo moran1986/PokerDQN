@@ -24,7 +24,7 @@ def encodeGame(game):
             totalPlayerState.append(playerState)
         else:
             totalCards.append(np.zeros((1,52)))
-            totalPlayerState.append(np.zeros((1,7)))
+            totalPlayerState.append(np.zeros((1,8)))
 
     encodedPots = []
     lastPot = np.zeros((1,9))
@@ -48,7 +48,7 @@ def encodeGame(game):
 
     totalCards = totalCards.reshape((1,9*52))
     encodedPots = encodedPots.reshape((1,9*9))
-    totalPlayerState = totalPlayerState.reshape((1,8*7))
+    totalPlayerState = totalPlayerState.reshape((1,8*8))
 
     totalState = np.concatenate((totalPlayerState, encodedPots), axis=1)
     return (totalCards, totalState)
@@ -56,10 +56,11 @@ def encodeGame(game):
 
 def encodePlayer(player, currentPlayer, table):
     playerCards = np.zeros((1,52))
-    playerState = np.zeros((1,7))
+    playerState = np.zeros((1,8))
     playerState[0,player.status]=1
     playerState[0,5]=player.bet
     playerState[0,6]=player.money
+    playerState[0,7]=player.step
     #if player==currentPlayer:
     playerCards[0,player.card1.suit*13+player.card1.value]=1
     playerCards[0,player.card2.suit*13+player.card2.value]=1

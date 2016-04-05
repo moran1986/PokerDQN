@@ -2,6 +2,7 @@
 import random
 import numpy as np
 import sys
+import math
 
 class AllOtherFolded(Exception):
     def __init__(self, player):
@@ -176,6 +177,7 @@ class Player:
         self.combination=None
         self.card1=None
         self.card2=None
+        self.step=0
 
     def giveHand(self, card1, card2):
         self.card1=card1
@@ -277,6 +279,7 @@ class Game:
             player.lastQ=None
             player.randomQ=False
             player.reward=0
+            player.step=0
             if player.money>0:
                 newPlayers.append(player)
 
@@ -317,6 +320,7 @@ class Game:
         currentPlayer = self.players[self.turn]
         currentPlayer.lastQ = qVal
         currentPlayer.randomQ = randomQ
+        currentPlayer.step += 1
         currentPot = self.getCurrentPot()
         if money < currentPot.size - currentPot.getPlayerBet(currentPlayer) and money < currentPlayer.money-currentPlayer.bet:
             self.doFold()
@@ -432,8 +436,13 @@ class Game:
                     elif winningCombination.__cmp__(winner.combination)==0:
                         potWinners.append(winner)
             potWinnerReward = potReward / len(potWinners)
+            first = True
             for winner in potWinners:
-                winner.reward += potWinnerReward
+                if first:
+                    winner.reward += math.ceil(potWinnerReward)
+                    first = False
+                else:
+                    winner.reward += math.floor(potWinnerReward)
 
         for player in self.players:
             player.reward -= player.bet

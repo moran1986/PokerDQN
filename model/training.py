@@ -19,11 +19,12 @@ def train():
     trainSettings = {'epochs': 1000,
                      'gamma': 0.975,
                      'epsilon': 0.7,
-                     'batchSize': 100,
+                     'batchSize': 50,
                      'buffer': 200,
                      'replay':[],
                      'h':0,
                      'model': Network.createModel()}
+
     experienceCache = [None] * len(game.players)
     while game.gameNum < trainSettings['epochs']:
         playerId = game.turn
@@ -34,11 +35,19 @@ def train():
         game.printGame()
         experienceCache[playerId] = (cards, state, betSize)
 
-        if game.gameNum%100 == 0 and game.gameNum>0:
+        if game.gameNum%100 == 0:
             textfile = open("model.json", 'w')
             textfile.write(trainSettings['model'].to_json())
             textfile.close()
             trainSettings['model'].save_weights('model.h5', overwrite=True)
+
+            modelfile = open('model.json')
+            model = model_from_json(modelfile.read())
+            modelfile.close()
+            model.load_weights('model.h5')
+
+            trainSettings['newStateModel'] = model
+
 
         if game.roundFinished:
             for i in range(len(game.players)):
@@ -58,7 +67,7 @@ def train():
                 trainSettings['epsilon'] -= (1/trainSettings['epochs'])
         else:
             gameCopy = game.copy()
-            ((newCards, newState), reward, terminal) = getNewState(gameCopy, trainSettings['model'], playerId)
+            ((newCards, newState), reward, terminal) = getNewState(gameCopy, trainSettings['newStateModel'], playerId)
             totalExperience = (cards, state, betSize, reward, newCards, newState, terminal)
             doTrain(trainSettings, totalExperience)
 
